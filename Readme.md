@@ -15,21 +15,16 @@ Create two configuration files in the directory
 - telegrambot.ini
 
 praw.ini :
-`
+```
 [memeboi]
-
 client_id=YOUR_CLIENT_ID_FROM_REDDIT
-
 client_secret=YOUR_CLIENT_SECRET_FROM_REDDIT
-
 user_agent="MemeBoi 1.0"
-`
+```
 
 telegrambot.ini :
-`
+```
 [telegram]
-
 token=YOUR_BOT_TOKEN
-
 chat_id=YOUR_CHAT_ID
-`
+```
