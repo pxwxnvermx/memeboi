@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import praw
-import random as rnd
 import telebot
-import datetime,threading
+import time
 import configparser
+import os
 
 config = configparser.ConfigParser()
 config.read("telegrambot.ini")
@@ -14,7 +14,6 @@ chatId = config['telegram']['chat_id']
 print("Bot Started")
 
 subr = "+".join(["memes","dankmemes","softwaregore"])
-print(subr)
 
 memes = []
 
@@ -25,18 +24,23 @@ memebot = telebot.TeleBot(token=token)
 def getMemes():
 	subreddit = reddit.subreddit(subr)
 	submission = subreddit.random()
-	print(subreddit.display_name)
 	return(submission.title,submission.url)
 
 
-def sendMemes():
-	print("Meme Coming",datetime.datetime.now())
-	meme = getMemes()
-	memebot.send_photo(
-		chat_id=chatId,
-		photo=meme[1],
-		caption=meme[0]
-	)		
-	threading.Timer(10,sendMemes).start()
+def checkType(url):
+	_, extension = os.path.splitext(url)
+	if(extension == ".jpg" or extension == ".png" or extension == ".jpeg"):
+		return True
 
-sendMemes()
+def sendMemes():
+	meme = getMemes()
+	if(checkType(meme[1])):
+		memebot.send_photo(
+			chat_id=chatId,
+			photo=meme[1],
+			caption=meme[0]
+		)	
+
+while True:
+	sendMemes()
+	time.sleep(900)
