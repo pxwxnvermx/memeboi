@@ -10,21 +10,11 @@ A telegram bot to supply memes to your channels
 
 ## Configuration
 
-Create two configuration files in the directory
-- praw.ini
-- telegrambot.ini
+Create a single configuration file config.ini from config.ini.example
+Specify comma seperated reddits in under [memebot] section in config
+Match is used for matching external sites in reddit
 
-praw.ini :
 ```
-[memeboi]
-client_id=YOUR_CLIENT_ID_FROM_REDDIT
-client_secret=YOUR_CLIENT_SECRET_FROM_REDDIT
-user_agent="MemeBoi 1.0"
-```
-
-telegrambot.ini :
-```
-[telegram]
-token=YOUR_BOT_TOKEN
-chat_id=YOUR_CHAT_ID
+match=imgur
+subreddit=dankmemes,memes
 ```

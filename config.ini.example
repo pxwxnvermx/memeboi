@@ -1,0 +1,12 @@
+[praw]
+client_id=
+client_secret=
+user_agent=
+
+[telebot]
+token=
+chat_id=
+
+[memebot]
+match=
+subreddit=
