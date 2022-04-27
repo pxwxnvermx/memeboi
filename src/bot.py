@@ -1,97 +1,87 @@
 #!/usr/bin/env python
 
-from re import match
-import praw
-from prawcore.exceptions import PrawcoreException
-import telebot
 import time
-import configparser
-import os
-import subprocess
 
+from praw import Reddit
+from praw.exceptions import PRAWException
+from praw.models import Submission
 from telebot.apihelper import ApiTelegramException
+from telebot.types import InputMediaPhoto
 
-config = configparser.ConfigParser()
-config.read("./config.ini")
-praw_config = config['praw']
-telebot_config = config['telebot']
-memebot_config = config['memebot']
+from utils import get_file_type
 
-subreddit_list = "+".join(memebot_config["subreddit"].split(","))
-match = memebot_config["match"].split(",")
 
-reddit = praw.Reddit(
-		client_id=praw_config["client_id"],
-    	client_secret=praw_config["client_secret"],
-    	user_agent=praw_config["user_agent"],
-	)
+class Post:
+    def __init__(self, post: Submission):
+        self.post = post
+        self.url = post.url
+        self.caption = f"{post.title} r/{post.subreddit} {post.url}"
 
-memebot = telebot.TeleBot(token=telebot_config["token"])
+        if "/gallery/" not in post.url:
+            self.type = get_file_type(self.url)
+        else:
+            self.type = "gallery"
 
-def getMemes():
-	print("[Fetching]")
-	subreddit = reddit.subreddit(subreddit_list)
-	submission = subreddit.rising()
-	return submission
+    def send(self, telegram, chat_id):
+        print(f"[Sending]: {self.caption}")
 
-def download_video(url):
-	command=['youtube-dl', '-g', url]
-	result=subprocess.run(
-		command,
-		stdout=subprocess.PIPE,
-		stderr=subprocess.PIPE,
-		universal_newlines=True
-		).stdout.split()
-	print("[DL URL]: ", result)
-	return result
+        if "/gallery/" in self.post.url:
+            gallery = []
+            for media in self.post.media_metadata.items():
+                url = media[1]["p"][0]["u"]
+                url = url.split("?")[0].replace("preview", "i")
 
-def sendMemes():
-	memes = getMemes()
-	for meme in memes:
-		url = meme.url
-		_, extension = os.path.splitext(url)
+                gallery.append(InputMediaPhoto(media=url))
 
-		print("[Sending]: ",meme.title, meme.subreddit, meme.url)
-		try:
-			if(extension == ".jpg" or extension == ".png" or extension == ".jpeg"):
-				memebot.send_photo(
-					chat_id=telebot_config["chat_id"],
-					photo=meme.url,
-					caption="{} r/{}".format(meme.title, meme.subreddit)
-				)
-			elif(extension == ".mp4" or extension == ".gif" or extension == ".gifv"):
-				memebot.send_video(
-					chat_id=telebot_config["chat_id"],
-					data=download_video(meme.url)[0],
-					caption="{} r/{}".format(meme.title, meme.subreddit)
-				)
-			elif(x in meme.url for x in match):
-				memebot.send_video(
-					chat_id=telebot_config["chat_id"],
-					data=download_video(meme.url)[1],
-					caption="{} r/{}".format(meme.title, meme.subreddit)
-				)
-			else:
-				memebot.send_message(
-					chat_id=telebot_config["chat_id"],
-					text=meme.title + "\n" +meme.url
-				)
-				print(meme.subreddit)
-		except PrawcoreException:
-			print("[Failed]: Reddit")
-		except ApiTelegramException:
-			print("[Failed]: Telegram")
-		except IndexError:
-			print("[Failed]")
+            telegram.send_media_group(chat_id, media=gallery)
+            telegram.send_message(chat_id, text=self.caption)
+        elif self.type == "image":
+            telegram.send_photo(
+                chat_id,
+                photo=self.url,
+                caption=self.caption,
+            )
 
-		print("[Sent]")
-		time.sleep(120)
+        elif self.type == "video":
+            telegram.send_video(
+                chat_id,
+                data=self.url,
+                caption=self.caption,
+                video=self.url,
+            )
+        else:
+            telegram.send_message(chat_id, text=self.caption)
 
-def main():
-	print("Bot Started")
 
-	while True:
-		sendMemes()
+class Bot:
+    def __init__(self, config, reddit: Reddit, telegram):
+        self.config = config
+        self.reddit = reddit
+        self.telegram = telegram
 
-if __name__ == "__main__":
-	main()
+    def _fetch(self):
+        subreddit_list = "+".join(self.config.get("memebot", "subreddit").split(","))
+        posts = self.reddit.subreddit(subreddit_list).hot()
+
+        return posts
+
+    def start(self):
+        posts = self._fetch()
+
+        for post in posts:
+            post = Post(post=post)
+            try:
+                post.send(
+                    telegram=self.telegram,
+                    chat_id=self.config.get("telebot", "chat_id"),
+                )
+
+            except PRAWException as e:
+                print(f"[Failed-Reddit]: {e}")
+                continue
+
+            except ApiTelegramException as e:
+                print(f"[Failed-Telegram]: {e}")
+                continue
+
+            time.sleep(int(self.config.get("memebot", "breaktime")) * 60)
