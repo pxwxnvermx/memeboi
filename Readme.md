@@ -12,9 +12,9 @@ A telegram bot to supply memes to your channels
 
 Create a single configuration file config.ini from config.ini.example
 Specify comma seperated reddits in under [memebot] section in config
-Match is used for matching external sites in reddit
+breaktime is used to control publishing intervals
 
 ```
-match=imgur
 subreddit=dankmemes,memes
+breaktime=1
 ```

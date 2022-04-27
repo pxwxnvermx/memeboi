@@ -8,5 +8,7 @@ token=
 chat_id=
 
 [memebot]
-match=
-subreddit=
+# comma seperated list of subreddits to get posts from
+subreddit=programming,golang,kubernetes
+# time in minutes before sending next post
+breaktime=
