@@ -6,7 +6,7 @@ idna==3.3
 mypy-extensions==0.4.3
 pathspec==0.9.0
 platformdirs==2.5.2
-praw==7.5.0
+praw==7.7.1
 prawcore==2.3.0
 pyTelegramBotAPI==4.4.1
 requests==2.27.1
