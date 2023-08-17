@@ -8,7 +8,7 @@ pathspec==0.9.0
 platformdirs==2.5.2
 praw==7.7.1
 prawcore==2.3.0
-pyTelegramBotAPI==4.4.1
+pyTelegramBotAPI==4.12.0
 requests==2.31.0
 tomli==2.0.1
 update-checker==0.18.0
